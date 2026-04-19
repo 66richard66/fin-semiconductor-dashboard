@@ -1,0 +1,29 @@
+name: Daily Data Update
+
+on:
+  schedule:
+    # 設定每天台灣時間下午 4:00 執行一次 (UTC 08:00)
+    - cron: '0 8 * * *'
+  workflow_dispatch: # 讓我們可以手動點擊執行來測試
+
+jobs:
+  update_data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 複製程式碼
+        uses: actions/checkout@v3
+
+      - name: 設定 Python 環境
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 安裝套件
+        run: |
+          pip install pandas yfinance requests sqlalchemy psycopg2-binary
+
+      - name: 執行更新腳本
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          DB_URL: ${{ secrets.DB_URL }}
+        run: python update_data.py
