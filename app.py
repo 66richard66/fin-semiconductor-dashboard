@@ -1,24 +1,22 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from sqlalchemy import create_engine
 
 # 1. 網頁基本設定
 st.set_page_config(page_title="總經與半導體儀表板", layout="wide")
 st.title("📈 台股半導體 vs 美國總經連動看板")
 st.markdown("這是一個自動追蹤台積電股價與美國 10 年期公債殖利率的互動式儀表板。")
 
-# 2. 改從 Supabase 雲端資料庫讀取資料！
-@st.cache_data(ttl=3600) # 快取 1 小時，避免教授狂按重新整理把資料庫塞爆
+# 2. 改用 Streamlit 官方最穩定的 st.connection 語法！
+@st.cache_data(ttl=3600)
 def load_data():
-    # 從 Streamlit 的保險箱拿取密碼
-    db_url = st.secrets["DB_URL"]
-    engine = create_engine(db_url)
+    # 讓 Streamlit 自動去 Secrets 抓取 DB_URL 並建立連線
+    conn = st.connection("supabase", type="sql", url=st.secrets["DB_URL"])
     
-    # 從資料表撈取資料
-    df = pd.read_sql("SELECT * FROM macro_stock_data", engine)
+    # 執行 SQL 語法並直接轉成 DataFrame
+    df = conn.query("SELECT * FROM macro_stock_data;")
     
-    # 把第一欄 (日期) 設為 Index 並轉換格式
+    # 清洗時間格式
     df.set_index(df.columns[0], inplace=True)
     df.index = pd.to_datetime(df.index)
     return df
