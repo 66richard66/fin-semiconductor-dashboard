@@ -21,6 +21,9 @@ def run_pipeline():
 
     url = f"https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key={FRED_API_KEY}&file_type=json"
     fred_data = requests.get(url).json()
+    if 'observations' not in fred_data:
+        print("❌ FRED API 錯誤詳情:", fred_data)
+        return
     fred_df = pd.DataFrame(fred_data['observations'])[['date', 'value']]
     fred_df['date'] = pd.to_datetime(fred_df['date']).dt.normalize()
     fred_df = fred_df[fred_df['value'] != '.'].set_index('date')
